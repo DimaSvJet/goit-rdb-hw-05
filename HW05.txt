@@ -1,0 +1,41 @@
+SELECT *, 
+(SELECT customer_id FROM orders o
+WHERE o.id = od.order_id) AS customer_id 
+FROM order_details od;
+
+SELECT *
+FROM order_details od
+WHERE od.order_id IN (SELECT o.id FROM orders o WHERE o.shipper_id=3);
+
+SELECT fod.order_id, AVG(fod.quantity) AS avg_quantity 
+FROM (SELECT *
+FROM order_details od WHERE od.quantity > 10) AS fod
+GROUP BY fod.order_id;
+
+WITH Fod_Table AS (SELECT * FROM order_details od WHERE od.quantity > 10)
+SELECT Fod_Table.order_id, AVG(Fod_Table.quantity) AS avg_quantity 
+FROM Fod_Table
+GROUP BY Fod_Table.order_id;
+
+
+DROP FUNCTION IF EXISTS HW04.Quotient
+
+DELIMITER //
+CREATE FUNCTION Quotient (dividend FLOAT, divisor FLOAT)
+RETURNS FLOAT
+DETERMINISTIC
+NO SQL
+READS SQL DATA
+BEGIN
+DECLARE result FLOAT;
+SET result = dividend / divisor;
+RETURN result;
+END;
+DELIMITER;
+
+SET @quantity = (
+SELECT SUM(quantity) FROM order_details 
+);
+
+SELECT *, Quotient(od.quantity, @quantity)*100 AS procent_quantity
+FROM order_details od;
